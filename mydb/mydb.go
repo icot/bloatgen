@@ -18,20 +18,27 @@ func init() {
 	}
 }
 
-func random_id(table string) int32 {
+func RandomId(table string) int32 {
     query := fmt.Sprintf("select max(id) from %v", table)
 	row, err := db.Query(query)
 	defer row.Close()
     if err != nil {
         fmt.Println(err)
     }
-    var max_id int32
+    var max_id sql.NullInt64
     row.Next()
     err = row.Scan(&max_id)
     if err != nil {
         panic(err)
     }
-    return 1 + rand.Int31n(max_id)
+    if max_id.Valid {
+        return 1 + rand.Int31n(int32(max_id.Int64))
+    } else {
+        fmt.Println("Empty table")
+        return 0
+    }
+}
+
 }
 
 func Insert(table, data string) {
