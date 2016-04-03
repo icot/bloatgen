@@ -20,26 +20,26 @@ func Data() string {
     return string(b)
 }
 
-func activity(c chan int32, inserts, deletes, updates float32) int32 {
+func activity(c chan int32, inserts, updates float64) {
     var counter int32  = 0
     for {
-        r := rand.Float32()
+        r := rand.Float64()
         data := Data()
         switch {
             case r <= inserts:
                 mydb.Insert("t_char", data)
                 mydb.Insert("t_text", data)
                 mydb.Insert("t_varchar", data)
-            case r > inserts && r <= inserts + deletes:
-                id := mydb.RandomId("t_char")
-                mydb.Delete("t_char", id)
-                mydb.Delete("t_text", id)
-                mydb.Delete("t_varchar", id)
-            default:
+            case r > inserts && r <= inserts + updates:
                 id := mydb.RandomId("t_char")
                 mydb.Update("t_char", id, data)
                 mydb.Update("t_text", id, data)
                 mydb.Update("t_varchar", id, data)
+            default:
+                id := mydb.RandomId("t_char")
+                mydb.Delete("t_char", id)
+                mydb.Delete("t_text", id)
+                mydb.Delete("t_varchar", id)
         }
         if counter >= 1000 {
             c <- counter
@@ -49,15 +49,22 @@ func activity(c chan int32, inserts, deletes, updates float32) int32 {
     }
 }
 
-func Simulate(duration int64, inserts, deletes, updates float32) {
-    c:= make(chan int32, 1)
-    go activity(c, inserts, deletes, updates)
-    select {
-        case <- time.After(time.Duration(duration) * time.Second):
-            fmt.Println("Timed out")
-        case res := <- c:
-            fmt.Printf("Completed %v iterations", res)
-            mydb.Stats()
+func Simulate(duration, frequency int64, inserts, updates float64) {
+    stats:= make(chan int32, 1)
+    ticker_chan := time.NewTicker(time.Second * time.Duration(frequency)).C
+    timer_chan := time.NewTimer(time.Duration(duration) * time.Minute).C
+    go activity(stats, inserts, updates)
+    for {
+        select {
+            case <- timer_chan :
+                fmt.Println("Timed out")
+                return
+            case <- ticker_chan :
+                fmt.Println("Collecting stats")
+                mydb.Stats()
+            case res := <- stats:
+                fmt.Printf("Completed %v iterations\n", res)
+            }
     }
 }
 
