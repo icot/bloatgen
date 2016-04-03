@@ -107,21 +107,3 @@ func Delete(table string, id int32) {
 	}
 }
 
-func Test() {
-	rows, err := db.Query("SELECT id, tstamp, length(data) FROM t_char")
-	defer rows.Close()
-    if err != nil {
-        fmt.Println(err)
-    }
-    fmt.Println("t_char contents")
-	for rows.Next() {
-        var id int
-		var timestamp time.Time
-		var data string
-		err = rows.Scan(&id, &timestamp, &data)
-        fmt.Println(id, timestamp, data)
-        if err != nil {
-            fmt.Println(err)
-        }
-	}
-}
