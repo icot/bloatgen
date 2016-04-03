@@ -54,18 +54,15 @@ func Insert(table, data string) {
 	if err != nil {
 	    panic(err)
 	}
-
 }
 
-func Update(table, data string) {
+func Update(table string, id int32, data string) {
 	tx, err := db.Begin()
 	if err != nil {
 		panic(err)
 	}
 	defer tx.Rollback()
-    id := random_id(table)
     query := fmt.Sprintf("update %v set data = $1 where id = $2", table)
-    fmt.Println(query, id)
 	stmt, err := tx.Prepare(query)
 	if err != nil {
         fmt.Println("Error preparing statement")
@@ -85,15 +82,13 @@ func Update(table, data string) {
 
 }
 
-func Delete(table string) {
+func Delete(table string, id int32) {
 	tx, err := db.Begin()
 	if err != nil {
 		panic(err)
 	}
 	defer tx.Rollback()
-    id := random_id(table)
     query := fmt.Sprintf("delete from %v where id = $1", table)
-    fmt.Println(query, id)
 	stmt, err := tx.Prepare(query)
 	if err != nil {
         fmt.Println("Error preparing statement")
