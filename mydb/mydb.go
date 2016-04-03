@@ -39,6 +39,25 @@ func RandomId(table string) int32 {
     }
 }
 
+func Stats() {
+	tx, err := db.Begin()
+	if err != nil {
+		panic(err)
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare("insert into stats.table_bloat select * from tables_bloat()");
+	if err != nil {
+		panic(err)
+	}
+	defer stmt.Close()
+    _, err = stmt.Exec()
+    if err != nil {
+        panic(err)
+    }
+	err = tx.Commit()
+	if err != nil {
+	    panic(err)
+	}
 }
 
 func Insert(table, data string) {
