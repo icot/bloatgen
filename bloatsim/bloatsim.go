@@ -31,18 +31,19 @@ func activity(c chan int32, inserts, deletes, updates float32) int32 {
                 mydb.Insert("t_text", data)
                 mydb.Insert("t_varchar", data)
             case r > inserts && r <= inserts + deletes:
-                mydb.Delete("t_char")
-                mydb.Delete("t_text")
-                mydb.Delete("t_varchar")
-            case r > inserts + deletes && r <= inserts + deletes + updates:
-                mydb.Update("t_char", data)
-                mydb.Update("t_text", data)
-                mydb.Update("t_varchar", data)
+                id := mydb.RandomId("t_char")
+                mydb.Delete("t_char", id)
+                mydb.Delete("t_text", id)
+                mydb.Delete("t_varchar", id)
             default:
-                fmt.Println("Select")
+                id := mydb.RandomId("t_char")
+                mydb.Update("t_char", id, data)
+                mydb.Update("t_text", id, data)
+                mydb.Update("t_varchar", id, data)
         }
-        if counter > 10 {
+        if counter >= 1000 {
             c <- counter
+            counter = 0
         }
         counter++
     }
@@ -51,11 +52,12 @@ func activity(c chan int32, inserts, deletes, updates float32) int32 {
 func Simulate(duration int64, inserts, deletes, updates float32) {
     c:= make(chan int32, 1)
     go activity(c, inserts, deletes, updates)
-	select {
-		case <- time.After(time.Duration(duration) * time.Second):
-			fmt.Println("Timed out")
+    select {
+        case <- time.After(time.Duration(duration) * time.Second):
+            fmt.Println("Timed out")
         case res := <- c:
-			fmt.Printf("Completed %v iterations", res)
+            fmt.Printf("Completed %v iterations", res)
+            mydb.Stats()
     }
 }
 
